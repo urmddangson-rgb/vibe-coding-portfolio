@@ -29,35 +29,46 @@ async function loadMovies() {
         showLoading();
         hideError();
         
-        // 한국어와 영어 데이터를 병렬로 가져오기
-        const [koResponse, enResponse] = await Promise.all([
+        // 한국어, 영어, 일본어 데이터를 병렬로 가져오기
+        const [koResponse, enResponse, jaResponse] = await Promise.all([
             fetch(`${API_BASE_URL}/movie/now_playing?api_key=${API_KEY}&language=ko-KR&page=1`),
-            fetch(`${API_BASE_URL}/movie/now_playing?api_key=${API_KEY}&language=en-US&page=1`)
+            fetch(`${API_BASE_URL}/movie/now_playing?api_key=${API_KEY}&language=en-US&page=1`),
+            fetch(`${API_BASE_URL}/movie/now_playing?api_key=${API_KEY}&language=ja-JP&page=1`)
         ]);
         
-        if (!koResponse.ok || !enResponse.ok) {
-            throw new Error(`HTTP error! status: ${koResponse.status || enResponse.status}`);
+        if (!koResponse.ok || !enResponse.ok || !jaResponse.ok) {
+            throw new Error(`HTTP error! status: ${koResponse.status || enResponse.status || jaResponse.status}`);
         }
         
-        const [koData, enData] = await Promise.all([
+        const [koData, enData, jaData] = await Promise.all([
             koResponse.json(),
-            enResponse.json()
+            enResponse.json(),
+            jaResponse.json()
         ]);
         
-        // 한국어와 영어 데이터를 영화 ID로 매칭하여 합치기
+        // 한국어, 영어, 일본어 데이터를 영화 ID로 매칭하여 합치기
         const enMoviesMap = new Map();
+        const jaMoviesMap = new Map();
+        
         enData.results.forEach(movie => {
             enMoviesMap.set(movie.id, movie);
         });
         
+        jaData.results.forEach(movie => {
+            jaMoviesMap.set(movie.id, movie);
+        });
+        
         const combinedMovies = koData.results.map(koMovie => {
             const enMovie = enMoviesMap.get(koMovie.id);
+            const jaMovie = jaMoviesMap.get(koMovie.id);
             return {
                 ...koMovie,
                 title_ko: koMovie.title || '',
                 overview_ko: koMovie.overview || '',
                 title: enMovie?.title || koMovie.title || '',
-                overview: enMovie?.overview || ''
+                overview: enMovie?.overview || '',
+                title_ja: jaMovie?.title || koMovie.title || '',
+                overview_ja: jaMovie?.overview || ''
             };
         });
         
@@ -101,24 +112,26 @@ function createMovieCard(movie) {
     
     const rating = movie.vote_average ? movie.vote_average.toFixed(1) : 'N/A';
     
-    // 한글 제목과 영어 제목 표시 (항상 둘 다 표시)
+    // 한글, 영어, 일본어 제목 표시 (항상 셋 다 표시)
     const koreanTitle = movie.title_ko || movie.title || '';
     const englishTitle = movie.title || movie.title_ko || '';
+    const japaneseTitle = movie.title_ja || movie.title || '';
     
     const titleDisplay = `
         <span class="title-korean">${koreanTitle}</span>
         <span class="title-english">${englishTitle}</span>
+        <span class="title-japanese">${japaneseTitle}</span>
     `;
     
-    // 한글 줄거리와 영어 줄거리 표시 (항상 둘 다 표시)
-    // overview_ko는 한국어 API에서 온 데이터, overview는 영어 API에서 온 데이터
-    const koreanOverview = movie.overview_ko ? movie.overview_ko : (movie.overview ? movie.overview : '줄거리가 없습니다.');
-    const englishOverview = movie.overview ? movie.overview : (movie.overview_ko ? movie.overview_ko : 'No overview available.');
+    // 한글, 영어, 일본어 줄거리 표시 (항상 셋 다 표시)
+    const koreanOverview = movie.overview_ko || movie.overview || '줄거리가 없습니다.';
+    const englishOverview = movie.overview || movie.overview_ko || 'No overview available.';
+    const japaneseOverview = movie.overview_ja || movie.overview || '概要がありません。';
     
-    // 한글과 영어가 동일하면 한 번만 표시하지 않고 둘 다 표시
     const overviewDisplay = `
         <div class="overview-korean">${koreanOverview}</div>
         <div class="overview-english">${englishOverview}</div>
+        <div class="overview-japanese">${japaneseOverview}</div>
     `;
     
     card.innerHTML = `
@@ -211,35 +224,46 @@ async function loadMoreMovies() {
     currentPage++;
     
     try {
-        // 한국어와 영어 데이터를 병렬로 가져오기
-        const [koResponse, enResponse] = await Promise.all([
+        // 한국어, 영어, 일본어 데이터를 병렬로 가져오기
+        const [koResponse, enResponse, jaResponse] = await Promise.all([
             fetch(`${API_BASE_URL}/movie/now_playing?api_key=${API_KEY}&language=ko-KR&page=${currentPage}`),
-            fetch(`${API_BASE_URL}/movie/now_playing?api_key=${API_KEY}&language=en-US&page=${currentPage}`)
+            fetch(`${API_BASE_URL}/movie/now_playing?api_key=${API_KEY}&language=en-US&page=${currentPage}`),
+            fetch(`${API_BASE_URL}/movie/now_playing?api_key=${API_KEY}&language=ja-JP&page=${currentPage}`)
         ]);
         
-        if (!koResponse.ok || !enResponse.ok) {
-            throw new Error(`HTTP error! status: ${koResponse.status || enResponse.status}`);
+        if (!koResponse.ok || !enResponse.ok || !jaResponse.ok) {
+            throw new Error(`HTTP error! status: ${koResponse.status || enResponse.status || jaResponse.status}`);
         }
         
-        const [koData, enData] = await Promise.all([
+        const [koData, enData, jaData] = await Promise.all([
             koResponse.json(),
-            enResponse.json()
+            enResponse.json(),
+            jaResponse.json()
         ]);
         
-        // 한국어와 영어 데이터를 영화 ID로 매칭하여 합치기
+        // 한국어, 영어, 일본어 데이터를 영화 ID로 매칭하여 합치기
         const enMoviesMap = new Map();
+        const jaMoviesMap = new Map();
+        
         enData.results.forEach(movie => {
             enMoviesMap.set(movie.id, movie);
         });
         
+        jaData.results.forEach(movie => {
+            jaMoviesMap.set(movie.id, movie);
+        });
+        
         const combinedMovies = koData.results.map(koMovie => {
             const enMovie = enMoviesMap.get(koMovie.id);
+            const jaMovie = jaMoviesMap.get(koMovie.id);
             return {
                 ...koMovie,
                 title_ko: koMovie.title || '',
                 overview_ko: koMovie.overview || '',
                 title: enMovie?.title || koMovie.title || '',
-                overview: enMovie?.overview || ''
+                overview: enMovie?.overview || '',
+                title_ja: jaMovie?.title || koMovie.title || '',
+                overview_ja: jaMovie?.overview || ''
             };
         });
         
@@ -266,35 +290,46 @@ async function searchMovies(query) {
     }
     
     try {
-        // 한국어와 영어 검색 결과를 병렬로 가져오기
-        const [koResponse, enResponse] = await Promise.all([
+        // 한국어, 영어, 일본어 검색 결과를 병렬로 가져오기
+        const [koResponse, enResponse, jaResponse] = await Promise.all([
             fetch(`${API_BASE_URL}/search/movie?api_key=${API_KEY}&language=ko-KR&query=${encodeURIComponent(query)}`),
-            fetch(`${API_BASE_URL}/search/movie?api_key=${API_KEY}&language=en-US&query=${encodeURIComponent(query)}`)
+            fetch(`${API_BASE_URL}/search/movie?api_key=${API_KEY}&language=en-US&query=${encodeURIComponent(query)}`),
+            fetch(`${API_BASE_URL}/search/movie?api_key=${API_KEY}&language=ja-JP&query=${encodeURIComponent(query)}`)
         ]);
         
-        if (!koResponse.ok || !enResponse.ok) {
-            throw new Error(`HTTP error! status: ${koResponse.status || enResponse.status}`);
+        if (!koResponse.ok || !enResponse.ok || !jaResponse.ok) {
+            throw new Error(`HTTP error! status: ${koResponse.status || enResponse.status || jaResponse.status}`);
         }
         
-        const [koData, enData] = await Promise.all([
+        const [koData, enData, jaData] = await Promise.all([
             koResponse.json(),
-            enResponse.json()
+            enResponse.json(),
+            jaResponse.json()
         ]);
         
-        // 한국어와 영어 데이터를 영화 ID로 매칭하여 합치기
+        // 한국어, 영어, 일본어 데이터를 영화 ID로 매칭하여 합치기
         const enMoviesMap = new Map();
+        const jaMoviesMap = new Map();
+        
         enData.results.forEach(movie => {
             enMoviesMap.set(movie.id, movie);
         });
         
+        jaData.results.forEach(movie => {
+            jaMoviesMap.set(movie.id, movie);
+        });
+        
         const combinedMovies = koData.results.map(koMovie => {
             const enMovie = enMoviesMap.get(koMovie.id);
+            const jaMovie = jaMoviesMap.get(koMovie.id);
             return {
                 ...koMovie,
                 title_ko: koMovie.title || '',
                 overview_ko: koMovie.overview || '',
                 title: enMovie?.title || koMovie.title || '',
-                overview: enMovie?.overview || ''
+                overview: enMovie?.overview || '',
+                title_ja: jaMovie?.title || koMovie.title || '',
+                overview_ja: jaMovie?.overview || ''
             };
         });
         
