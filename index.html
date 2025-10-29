@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Noona Netflix - 현재 상영 영화</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <header class="header">
+        <div class="container">
+            <div class="logo">
+                <h1>Noona Netflix</h1>
+            </div>
+            <nav class="nav">
+                <a href="#" class="nav-link active">홈</a>
+                <a href="#" class="nav-link">영화</a>
+                <a href="#" class="nav-link">TV 프로그램</a>
+                <a href="#" class="nav-link">내가 찜한 콘텐츠</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="main">
+        <section class="hero">
+            <div class="hero-content">
+                <h2 class="hero-title">현재 상영 중인 영화</h2>
+                <p class="hero-subtitle">최신 영화를 만나보세요</p>
+            </div>
+        </section>
+
+        <section class="movies-section">
+            <div class="container">
+                <h3 class="section-title">현재 상영 영화</h3>
+                <div class="movies-grid" id="moviesGrid">
+                    <!-- 영화 카드들이 여기에 동적으로 추가됩니다 -->
+                </div>
+                <div class="loading" id="loading">
+                    <div class="spinner"></div>
+                    <p>영화를 불러오는 중...</p>
+                </div>
+                <div class="error" id="error" style="display: none;">
+                    <p>영화를 불러오는데 실패했습니다. 다시 시도해주세요.</p>
+                    <button class="retry-btn" onclick="loadMovies()">다시 시도</button>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2024 Noona Netflix. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>
